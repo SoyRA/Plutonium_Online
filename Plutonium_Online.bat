@@ -27,6 +27,7 @@ SET PLUTONIUM_UPDATER_URL=https://github.com/mxve/plutonium-updater.rs/releases/
 SET PLUTONIUM_UPDATER_ARCHIVE=plutonium-updater.zip
 SET PLUTONIUM_UPDATER_FILE=plutonium-updater.exe
 
+SET PLUTONIUM_CDN=https://cdn.plutoniummod.com/updater/prod/info.json
 SET PLUTONIUM_PATH=%LOCALAPPDATA%\Plutonium
 SET PLUTONIUM_FILE=plutonium-launcher-win32.exe
 
@@ -115,7 +116,7 @@ EXIT /B
     )
 
     ECHO Iniciando %PLUTONIUM_UPDATER_FILE%...
-    CALL "%PLUTONIUM_PATH%\%PLUTONIUM_UPDATER_FILE%" -d "%PLUTONIUM_PATH%" -f -l -q
+    CALL "%PLUTONIUM_PATH%\%PLUTONIUM_UPDATER_FILE%" -d "%PLUTONIUM_PATH%" -f -l -q --cdn-url "%PLUTONIUM_CDN%"
 
     IF %ERRORLEVEL% NEQ 0 (
         COLOR 04
