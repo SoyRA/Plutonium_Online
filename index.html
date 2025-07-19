@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es-AR" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="SoyRA">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resolver IPs del CDN de Plutonium</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <h1 class="h3 my-3">Resolver IPs de <code id="cdn-text-1"></code></h1>
+
+        <ol>
+            <li>Presioná las teclas <kbd>Windows</kbd> + <kbd>R</kbd> para abrir <strong>Ejecutar</strong></li>
+            <li>En el campo de texto, escribí <code>notepad.exe %WINDIR%\System32\drivers\etc\hosts</code> y después presioná <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> para abrirlo como administrador.</li>
+            <li>Pegá estas líneas al final del archivo:
+                <ul>
+                    <li>O reemplazalas si ya tenías algo referido a <code id="cdn-text-2"></code></li>
+                </ul>
+                <div>
+                    <button type="button" class="btn btn-outline-success my-2" id="resolver">Obtener IPs</button>
+                    <textarea style="min-width: 100%; min-height: 256px; resize: none;" id="hosts" placeholder="Hacé clic en 'Obtener IPs'" spellcheck="false" readonly></textarea>
+                </div>
+            </li>
+            <li>Guardá el archivo y nuevamente presioná las teclas <kbd>Windows</kbd> + <kbd>R</kbd> para abrir <strong>Ejecutar</strong></li>
+            <li>En el campo de texto, escribí <code>ipconfig /flushdns</code> y después presioná <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> para abrirlo como administrador.</li>
+            <li>Listo, ya está todo para que vuelvas a probar si Plutonium Updater te funciona.
+                <ul>
+                    <li>En caso de que no, revertí los cambios del paso 3 y usá temporalmente <a href="https://one.one.one.one/" target="_blank" rel="noreferrer noopener">Cloudflare WARP</a>.</li>
+                </ul>
+            </li>
+        </ol>
+
+    </main>
+
+    <footer class="py-3 my-4 text-center text-body-secondary">
+        <small>Hecho por <strong><a href="https://github.com/SoyRA/Plutonium_Online" target="_blank" rel="noreferrer noopener">Soy R.A.</a></strong> &middot; Licencia <a href="https://github.com/SoyRA/Plutonium_Online/blob/main/LICENSE" target="_blank" rel="noreferrer noopener">MIT</a> &middot; 2025</small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+
+    <script>
+        // La URL del CDN de Plutonium.
+        const PLUTONIUM_CDN = "cdn.plutoniummod.com";
+
+        // Los elementos HTML que se van a utilizar.
+        const
+            CDN_TEXT_1 =                document.getElementById("cdn-text-1"),
+            CDN_TEXT_2 =                document.getElementById("cdn-text-2"),
+            BTN_RESOLVER =              document.getElementById("resolver"),
+            OUTPUT =                    document.getElementById("hosts")
+        ;
+
+        // Establecer el texto de los elementos HTML.
+        CDN_TEXT_1.textContent =        PLUTONIUM_CDN;
+        CDN_TEXT_2.textContent =        PLUTONIUM_CDN;
+
+        /**
+         * Resuelve las IPs del CDN de Plutonium y las pone en el textarea.
+         */
+        BTN_RESOLVER.addEventListener("click", async () => {
+            // Desactivar el botón para prevenir múltiples clics.
+            BTN_RESOLVER.disabled =     true;
+
+            // Mostrar mensaje mientras se consulta.
+            OUTPUT.value =              "Resolviendo IPs...";
+
+            try {
+                // Hacer una consulta a la API de DNS pública de Google.
+                const
+                    RESPONSE =          await fetch(`https://dns.google/resolve?name=${PLUTONIUM_CDN}&type=A`),
+                    DATA =              await RESPONSE.json(),
+                    LINES =             DATA.Answer?.map(entry => `${entry.data} ${PLUTONIUM_CDN}`) ?? ["No se encontraron IPs."]
+                ;
+                OUTPUT.value =          LINES.join('\n');
+            } catch (error) {
+                // Mostrar mensaje de error si algo falla.
+                OUTPUT.value =          'Hubo un error al resolver: ' + error.message;
+            } finally {
+                // Volver a habilitar el botón.
+                BTN_RESOLVER.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+
+</html>
