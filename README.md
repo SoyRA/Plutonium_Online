@@ -15,4 +15,4 @@ Probado su funcionamiento en Windows 10 (Versión 22H2) y Windows 11 (Versión 2
 
 ## Aviso
 Este script fue creado porque algunos usuarios afirman que usar el actualizador oficial les da error mientras que el de terceros no.\
-Caso contrarío, te tocaría hacer algo como [esto](https://docs.skmedix.pl/troubleshooting/launcher-related#connection-problems) donde parece ser que la única solución es usar *Cloudflare WARP*.
+Caso contrarío, te tocaría hacer algo como [esto](https://docs.skmedix.pl/troubleshooting/launcher-related#connection-problems) donde parece ser que la única solución es usar *Cloudflare WARP* (el script te pregunta si querés usarlo).
