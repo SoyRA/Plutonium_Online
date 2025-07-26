@@ -15,13 +15,17 @@
 CHCP 65001 > NUL
 COLOR 07
 TITLE Plutonium Online Launcher
-SETLOCAL ENABLEEXTENSIONS
+SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 CD /D "%~dp0" || PAUSE && EXIT /B
 
 :: ============================================================================
 :: @section      Variables internas
 :: @description  Variables que el usuario no debe modificar.
 :: ============================================================================
+
+SET CLOUDFLARE_WARP_URL=https://1111-releases.cloudflareclient.com/win/latest
+SET CLOUDFLARE_WARP_PATH=%PROGRAMFILES%\Cloudflare\Cloudflare WARP
+SET CLOUDFLARE_WARP_FILE=Cloudflare_WARP.msi
 
 SET PLUTONIUM_UPDATER_URL=https://github.com/mxve/plutonium-updater.rs/releases/download/v0.4.5/plutonium-updater-x86_64-pc-windows-msvc.zip
 SET PLUTONIUM_UPDATER_ARCHIVE=plutonium-updater.zip
@@ -118,10 +122,32 @@ EXIT /B
     ECHO Iniciando %PLUTONIUM_UPDATER_FILE%...
     CALL "%PLUTONIUM_PATH%\%PLUTONIUM_UPDATER_FILE%" -d "%PLUTONIUM_PATH%" -f -l -q --cdn-url "%PLUTONIUM_CDN%"
 
+    IF DEFINED CLOUDFLARE_WARP_ENABLED (
+        CALL "%CLOUDFLARE_WARP_PATH%\warp-cli.exe" disconnect > NUL
+        :: Acá se está tomando el ERRORLEVEL de Plutonium y no de Cloudflare.
+        IF %ERRORLEVEL% NEQ 0 (
+            COLOR 04
+            ECHO.
+            ECHO Actualización fallida.
+            ECHO Se detendrá la ejecución...
+            ECHO.
+            PAUSE
+            EXIT
+        )
+    )
+
     IF %ERRORLEVEL% NEQ 0 (
         COLOR 04
         ECHO.
-        ECHO Actualización fallida.
+        ECHO Actualización fallida, es posible que seas de las personas que necesita Cloudflare WARP para poder actualizar Plutonium.
+        ECHO.
+        CHOICE /C SN /N /M "¿Querés intentarlo de nuevo usando Cloudflare WARP, (S)í o (N)o? "
+
+        IF !ERRORLEVEL! EQU 1 (
+            CALL :enable_cloudflare_warp
+            GOTO :EOF
+        )
+
         ECHO Se detendrá la ejecución...
         ECHO.
         PAUSE
@@ -133,6 +159,74 @@ EXIT /B
     ECHO.
     PAUSE
     CALL :run_launcher
+    GOTO :EOF
+
+:: ============================================================================
+:: @subroutine   enable_cloudflare_warp
+:: @description  Descarga, instala e inicia Cloudflare WARP.
+:: @returns      CLOUDFLARE_WARP_ENABLED
+:: ============================================================================
+
+:enable_cloudflare_warp
+    TITLE Cloudflare WARP
+    CLS
+    COLOR 07
+
+    CALL "%CLOUDFLARE_WARP_PATH%\warp-cli.exe" status > NUL 2>&1
+
+    IF %ERRORLEVEL% NEQ 0 (
+        ECHO Descargando Cloudflare WARP...
+        CALL curl.exe -f -L -o "%TEMP%\%CLOUDFLARE_WARP_FILE%" -# "%CLOUDFLARE_WARP_URL%"
+
+        IF !ERRORLEVEL! NEQ 0 (
+            COLOR 04
+            ECHO.
+            ECHO Descarga fallida.
+            ECHO Se detendrá la ejecución...
+            ECHO.
+            PAUSE
+            EXIT
+        )
+
+        ECHO Instalando Cloudflare WARP...
+        START "Cloudflare WARP" /D "%WINDIR%\System32" /WAIT msiexec.exe /i "%TEMP%\%CLOUDFLARE_WARP_FILE%" /passive
+
+        IF !ERRORLEVEL! NEQ 0 (
+            COLOR 04
+            ECHO.
+            ECHO Instalación fallida.
+            ECHO Se detendrá la ejecución...
+            ECHO.
+            PAUSE
+            EXIT
+        )
+
+        ECHO Instalación exitosa.
+        ECHO.
+        ECHO 1. Seguí las instrucciones en pantalla porque es la primera vez que se inicia Cloudflare WARP.
+        ECHO 2. Cuando te salga que podes conectarte, no necesitás hacerlo y ahí podes cerrarlo para continuar con este script.
+        ECHO 3. Cloudflare WARP se ejecuta en cada inicio, podes desactivarlo en cualquier momento desde la pestaña Inicia del Administrador de tareas.
+        ECHO.
+        PAUSE
+        CLS
+    )
+
+    ECHO Conectando a Cloudflare WARP...
+    CALL "%CLOUDFLARE_WARP_PATH%\warp-cli.exe" connect > NUL
+    TIMEOUT /T 5 /NOBREAK > NUL
+    SET CLOUDFLARE_WARP_ENABLED=1
+
+    ECHO.
+    ECHO No tengo ganas de programar más comprobaciones, si lo siguiente dice algo de conectado pues está todo bien. :P
+    ECHO.
+    CALL "%CLOUDFLARE_WARP_PATH%\warp-cli.exe" status
+    ECHO.
+    ECHO Asumiendo que todo bien, ahora se volverá a repetir el proceso de actualización de Plutonium usando Cloudflare WARP.
+    ECHO Y desactivando el mismo cuando el proceso finalice.
+    ECHO.
+    PAUSE
+
+    CALL :run_updater
     GOTO :EOF
 
 :: ============================================================================
